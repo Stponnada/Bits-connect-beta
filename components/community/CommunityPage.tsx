@@ -11,40 +11,64 @@ const CommunityPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
+    // No need to set loading here, it's handled before the call in useEffect
     setError(null);
     
-    const { data, error } = await supabase
-      .from('posts')
-      .select(`
-        id,
-        content,
-        created_at,
-        user_id,
-        author:profiles(id, username, avatar_url)
-      `)
-      .order('created_at', { ascending: false });
+    try {
+      // Step 1: Fetch all posts from the 'posts' table.
+      const { data: postsData, error: postsError } = await supabase
+        .from('posts')
+        .select('id, content, created_at, user_id')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      setError(error.message);
-      console.error("Error fetching posts:", error);
-    } else if (data) {
-      // FIX: The Supabase query may return `author` as an array. Map it to a single object.
-      const formattedPosts = data.map((post: any) => ({
+      if (postsError) throw postsError;
+      if (!postsData) {
+        setPosts([]);
+        return;
+      }
+
+      // Step 2: Extract the unique user IDs from the posts.
+      const userIds = [...new Set(postsData.map(p => p.user_id).filter(Boolean))];
+
+      if (userIds.length === 0) {
+        // If there are no users, just set the posts with null authors.
+        setPosts(postsData.map(p => ({...p, author: null})));
+        return;
+      }
+      
+      // Step 3: Fetch all the profiles that match the user IDs.
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+      
+      if (profilesError) throw profilesError;
+
+      // Step 4: Create a Map for efficient profile look-up.
+      const profilesMap = new Map(profilesData.map(p => [p.id, p]));
+
+      // Step 5: "Join" the posts with their author profiles in the code.
+      const combinedPosts = postsData.map(post => ({
         ...post,
-        author: Array.isArray(post.author) ? post.author[0] || null : post.author,
+        author: profilesMap.get(post.user_id) || null,
       }));
-      setPosts(formattedPosts);
+
+      setPosts(combinedPosts);
+    } catch (err: any) {
+      setError(err.message);
+      console.error("Error fetching posts and profiles:", err);
+    } finally {
+        setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   useEffect(() => {
     setLoading(true);
     fetchPosts();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchPosts]);
 
   const handlePostCreated = (newPost: PostType) => {
+    // Add the new post to the top of the feed for an instant UI update.
     setPosts(prevPosts => [newPost, ...prevPosts]);
   }
 
