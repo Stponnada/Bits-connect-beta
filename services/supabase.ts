@@ -1,27 +1,37 @@
-// FIX: Add a triple-slash directive to include Vite's client types, which are needed for `import.meta.env`.
-/// <reference types="vite/client" />
-
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 // These variables are read from the environment using import.meta.env for Vite projects.
-// Your Netlify variables must be named VITE_SUPABASE_URL and VITE_SUPABASE_KEY.
-export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY;
+// FIX: Using `(import.meta as any)` to bypass TypeScript errors when Vite types are not available.
+const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
+const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_KEY;
 
 // Create a function to initialize and export the client.
-// This prevents the app from crashing if env vars are missing during module load.
+// This provides better error handling and debugging.
 const initializeSupabase = (): SupabaseClient | null => {
-  if (supabaseUrl && supabaseAnonKey) {
-    return createClient(supabaseUrl, supabaseAnonKey);
+  // First, check if the variables even exist.
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error("Supabase environment variables not found. Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_KEY are set in your deployment environment.");
+    return null;
   }
   
-  // This log helps developers in local environments or during build debugging.
-  // The AuthContext will handle showing a user-friendly error in the UI.
-  console.error("Supabase environment variables not found. The application will not be able to connect to the database.");
-  return null;
+  // Log the URL for debugging. This will show the exact value being used.
+  console.log("Attempting to connect to Supabase with URL:", supabaseUrl);
+
+  try {
+    // Let the Supabase client itself validate the URL and key.
+    // If they are invalid, it will throw an error which we can catch.
+    const client = createClient(supabaseUrl, supabaseAnonKey);
+    console.log("Supabase client initialized successfully.");
+    return client;
+  } catch (error) {
+    // This will catch the "Invalid supabaseUrl" error and provide clear context.
+    console.error("Failed to initialize Supabase client. Please check if the URL and Anon Key are correct.", error);
+    console.error("The invalid Supabase URL provided was:", supabaseUrl);
+    return null;
+  }
 };
 
-// Export the initialized client. It will be null if the config is missing.
+// Export the initialized client. It will be null if the config is missing or invalid.
 // The application's AuthProvider is responsible for checking this
 // and displaying an appropriate error message to the user.
 export const supabase = initializeSupabase();
