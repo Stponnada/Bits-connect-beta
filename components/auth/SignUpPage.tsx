@@ -41,7 +41,6 @@ const SignUpPage: React.FC = () => {
         const { error: profileError } = await supabase.from('profiles').insert({
             id: data.user.id,
             username: username,
-            email: email,
         });
 
         if(profileError) {
