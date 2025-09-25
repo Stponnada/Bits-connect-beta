@@ -1,9 +1,12 @@
+// FIX: Add a triple-slash directive to include Vite's client types, which are needed for `import.meta.env`.
+/// <reference types="vite/client" />
+
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// These variables are read from the environment.
-// On Netlify, they must be set in the site's "Build & deploy" > "Environment" settings.
-export const supabaseUrl = process.env.SUPABASE_URL;
-export const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+// These variables are read from the environment using import.meta.env for Vite projects.
+// Your Netlify variables must be named VITE_SUPABASE_URL and VITE_SUPABASE_KEY.
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY;
 
 // Create a function to initialize and export the client.
 // This prevents the app from crashing if env vars are missing during module load.

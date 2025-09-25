@@ -28,9 +28,12 @@ const CommunityPage: React.FC = () => {
       setError(error.message);
       console.error("Error fetching posts:", error);
     } else if (data) {
-      // The Supabase query returns data that matches our PostType.
-      // No complex mapping is needed.
-      setPosts(data as PostType[]);
+      // FIX: The Supabase query may return `author` as an array. Map it to a single object.
+      const formattedPosts = data.map((post: any) => ({
+        ...post,
+        author: Array.isArray(post.author) ? post.author[0] || null : post.author,
+      }));
+      setPosts(formattedPosts);
     }
     setLoading(false);
   }, []);

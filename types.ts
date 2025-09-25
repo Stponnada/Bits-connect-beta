@@ -6,7 +6,8 @@ export interface UserProfile {
   avatar_url?: string;
   full_name?: string;
   email?: string;
-  updated_at: string;
+  // FIX: Made `updated_at` optional to accommodate partial profile queries.
+  updated_at?: string;
 }
 
 export interface Post {
