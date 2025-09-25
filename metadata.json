@@ -1,0 +1,5 @@
+{
+  "name": "Bits Connect",
+  "description": "A rebuilt and stabilized version of the Bits Connect application, focusing on community engagement, events, and profiles for students. This version uses React, TypeScript, Tailwind CSS, and Supabase for a modern, scalable, and deployable solution.",
+  "requestFramePermissions": []
+}
