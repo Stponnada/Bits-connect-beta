@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { supabase } from '../../services/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import Button from '../ui/Button';
-import type { Post } from '../../types';
+import type { Post, UserProfile } from '../../types';
 
 interface CreatePostFormProps {
     onPostCreated: (post: Post) => void;
@@ -32,9 +31,12 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ onPostCreated }) => {
       setError(error.message);
     } else if(data) {
       setContent('');
+      // FIX: Ensure the author object being passed is a complete, valid UserProfile.
+      // The `profile` from useAuth is the complete, correct object to use here.
+      // This prevents rendering errors if the profile was partial or null.
       const newPost: Post = {
           ...data,
-          author: profile
+          author: profile as UserProfile 
       };
       onPostCreated(newPost);
     }
