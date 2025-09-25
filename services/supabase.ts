@@ -1,9 +1,11 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// These variables are read from the environment using import.meta.env for Vite projects.
-// FIX: Using `(import.meta as any)` to bypass TypeScript errors when Vite types are not available.
-const supabaseUrl = (import.meta as any).env.VITE_SUPABASE_URL;
-const supabaseAnonKey = (import.meta as any).env.VITE_SUPABASE_KEY;
+// FIX: Safely access Vite environment variables.
+// This prevents the "Cannot read properties of undefined" crash by checking if `import.meta.env` exists.
+// If it doesn't, the variables will be undefined, and the app's own error handling will take over.
+const env = (import.meta as any).env || {};
+const supabaseUrl = env.VITE_SUPABASE_URL;
+const supabaseAnonKey = env.VITE_SUPABASE_KEY;
 
 // Create a function to initialize and export the client.
 // This provides better error handling and debugging.
