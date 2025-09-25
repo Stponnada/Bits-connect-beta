@@ -45,7 +45,9 @@ const CommunityPage: React.FC = () => {
       if (profilesError) throw profilesError;
 
       // Step 4: Create a Map for efficient profile look-up.
-      const profilesMap = new Map(profilesData.map(p => [p.id, p]));
+      // FIX: Handle the case where profilesData might be null by using optional chaining
+      // and providing a fallback empty array. This prevents the app from crashing.
+      const profilesMap = new Map(profilesData?.map(p => [p.id, p]) || []);
 
       // Step 5: "Join" the posts with their author profiles in the code.
       const combinedPosts = postsData.map(post => ({
